@@ -5,6 +5,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",
+    "https://fake-tencent-agent.pages.dev",
 ]
 
 app.add_middleware(
