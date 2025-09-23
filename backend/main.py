@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 import os
+from google import genai
 
 app = FastAPI()
 
@@ -17,11 +18,17 @@ async def analyze_photo(photo: UploadFile = File(...), prompt: str = Form("")):
         contents = await photo.read()
         if not contents:
             raise HTTPException(status_code=400, detail="Empty file uploaded.")
+        client = genai.Client()
+        response = client.generate_content(
+            model="gemini-2.5-flash",
+            contents="ping",
+        )
+        client.close()
         return {
             "filename": photo.filename,
             "size_bytes": len(contents),
             "prompt": prompt,
-            "llm_output": "Image received. Processing pipeline is ready.",
+            "llm_output": response.text,
         }
     except HTTPException:
         raise
