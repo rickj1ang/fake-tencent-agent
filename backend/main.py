@@ -1,21 +1,14 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
+import os
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:5173",
-    "https://fake-tencent-agent.pages.dev",
-    "https://fta-backend-*.trycloudflare.com",  # Cloudflare Tunnel 域名
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Serve static frontend if present (mounted at root)
+STATIC_DIR = os.getenv("STATIC_DIR", "/app/static")
+if os.path.isdir(STATIC_DIR):
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 @app.get("/health")
 async def health():
@@ -37,3 +30,11 @@ async def analyze_photo(photo: UploadFile = File(...), prompt: str = Form("")):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+# Fallback to index.html for SPA routes when static exists
+@app.get("/{full_path:path}")
+async def spa_fallback(full_path: str):
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Not Found")

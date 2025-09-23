@@ -7,12 +7,6 @@ function App() {
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-  
-  // Debug: log the API base URL
-  console.log('API Base URL:', apiBase)
-  console.log('Full request URL:', `${apiBase}/api/analyze-photo`)
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -26,7 +20,7 @@ function App() {
       const formData = new FormData()
       formData.append('photo', file)
       formData.append('prompt', prompt)
-      const res = await fetch(`${apiBase}/api/analyze-photo`, {
+      const res = await fetch(`/api/analyze-photo`, {
         method: 'POST',
         body: formData,
       })
