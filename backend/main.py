@@ -19,7 +19,7 @@ async def analyze_photo(photo: UploadFile = File(...), prompt: str = Form("")):
         if not contents:
             raise HTTPException(status_code=400, detail="Empty file uploaded.")
         client = genai.Client()
-        response = client.generate_content(
+        response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents="ping",
         )
