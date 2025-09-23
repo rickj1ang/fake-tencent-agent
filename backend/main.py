@@ -6,6 +6,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",
     "https://fake-tencent-agent.pages.dev",
+    "https://fta-backend-*.trycloudflare.com",  # Cloudflare Tunnel 域名
 ]
 
 app.add_middleware(
