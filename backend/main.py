@@ -1,11 +1,11 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import StreamingResponse
+from fastapi.responses import StreamingResponse
 import os
 import asyncio
 import json
-from .detailed_analyzer import run_detailed
-from .simple_recognizer import quick_label
+from detailed_analyzer import run_detailed
+from simple_recognizer import quick_label
 
 app = FastAPI()
 
