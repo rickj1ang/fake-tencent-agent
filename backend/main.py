@@ -1,14 +1,11 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import FileResponse
 import os
 
 app = FastAPI()
 
-# Serve static frontend if present (mounted at root)
+# Config
 STATIC_DIR = os.getenv("STATIC_DIR", "/app/static")
-if os.path.isdir(STATIC_DIR):
-    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 @app.get("/health")
 async def health():
@@ -31,10 +28,6 @@ async def analyze_photo(photo: UploadFile = File(...), prompt: str = Form("")):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-# Fallback to index.html for SPA routes when static exists
-@app.get("/{full_path:path}")
-async def spa_fallback(full_path: str):
-    index_path = os.path.join(STATIC_DIR, "index.html")
-    if os.path.isfile(index_path):
-        return FileResponse(index_path)
-    raise HTTPException(status_code=404, detail="Not Found")
+# Mount static AFTER API routes so /api/* takes precedence
+if os.path.isdir(STATIC_DIR):
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
