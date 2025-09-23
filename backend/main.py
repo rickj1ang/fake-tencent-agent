@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 import os
 from google import genai
+from google.genai import types
 
 app = FastAPI()
 
@@ -21,7 +22,10 @@ async def analyze_photo(photo: UploadFile = File(...), prompt: str = Form("")):
         client = genai.Client()
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents="ping",
+            contents=[
+                        types.Part.from_bytes(mime_type="image/jpeg", data=contents),
+                        types.Part.from_text(text=prompt)
+                    ],
         )
         return {
             "filename": photo.filename,
