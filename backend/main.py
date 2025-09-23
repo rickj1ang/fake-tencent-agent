@@ -1,8 +1,11 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import StreamingResponse
 import os
-from google import genai
-from google.genai import types
+import asyncio
+import json
+from .detailed_analyzer import run_detailed
+from .simple_recognizer import quick_label
 
 app = FastAPI()
 
@@ -13,54 +16,32 @@ STATIC_DIR = os.getenv("STATIC_DIR", "/app/static")
 async def health():
     return {"status": "ok"}
 
+# Single endpoint: stream quick first, then detailed
 @app.post("/api/analyze-photo")
-async def analyze_photo(photo: UploadFile = File(...)):
-    try:
-        contents = await photo.read()
-        if not contents:
-            raise HTTPException(status_code=400, detail="Empty file uploaded.")
-        client = genai.Client()
-        prompts = '''
-        ## 请详细识别照片中的主要的产品和物品。对于每个识别出的产品，请提取以下信息并以 JSON 数组的形式返回
+async def analyze_photo_stream(photo: UploadFile = File(...)):
+    contents = await photo.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="Empty file uploaded.")
 
-        1.  **`product_name`**: 产品的通用名称（例如：智能手机、运动鞋、饮料瓶）。
-        2.  **`brand`**: 产品的品牌名称（例如：Apple, Nike, Coca-Cola）。
-        3.  **`model_or_specific_name`**: 产品的具体型号或更详细的名称（例如：iPhone 15 Pro Max, Air Force 1 Low, Classic Coke）。
-        4.  **`product_category`**: 产品所属的通用类别（例如：电子产品、服装、食品饮料、汽车、家居用品）。
-        5.  **`manufacturer_or_parent_company`**: 制造该产品或拥有该品牌的公司名称（例如：Apple Inc., Nike Inc., The Coca-Cola Company）。
+    async def event_stream():
+        try:
+            # run both concurrently
+            quick_task = asyncio.to_thread(quick_label, contents)
+            detailed_task = asyncio.to_thread(run_detailed, contents)
 
-        ## 示例 JSON 输出结构
-        [
-          {
-            "product_name": "智能手机",
-            "brand": "Apple",
-            "model_or_specific_name": "iPhone 15 Pro Max",
-            "product_category": "电子产品",
-            "manufacturer_or_parent_company": "Apple Inc."
-          },
-          {
-            "product_name": "运动鞋",
-            "brand": "Nike",
-            "model_or_specific_name": "Air Force 1 Low",
-            "product_category": "服装",
-            "manufacturer_or_parent_company": "Nike Inc."
-          }
-        ]
-        '''
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                        types.Part.from_bytes(mime_type="image/jpeg", data=contents),
-                        types.Part.from_text(text=prompts)
-                    ],
-        )
-        return {
-            "llm_output": response.text,
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+            # send quick as soon as ready
+            quick = await quick_task
+            yield f"event: quick\ndata: {json.dumps({'quick_result': quick}, ensure_ascii=False)}\n\n"
+
+            # then detailed
+            detailed = await detailed_task
+            yield f"event: detailed\ndata: {json.dumps({'llm_output': detailed}, ensure_ascii=False)}\n\n"
+            yield "event: done\ndata: {}\n\n"
+        except Exception as e:
+            err = {"error": str(e)}
+            yield f"event: error\ndata: {json.dumps(err, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 # Mount static AFTER API routes so /api/* takes precedence
 if os.path.isdir(STATIC_DIR):

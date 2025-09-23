@@ -3,13 +3,15 @@ import { useState } from 'react'
 function App() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [quick, setQuick] = useState<string | null>(null)
+  const [detailed, setDetailed] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    setResult(null)
+    setQuick(null)
+    setDetailed(null)
     if (!file) {
       setError('Please choose an image file.')
       return
@@ -18,16 +20,54 @@ function App() {
       setLoading(true)
       const formData = new FormData()
       formData.append('photo', file)
-      const res = await fetch(`/api/analyze-photo`, {
+
+      const res = await fetch(`/api/analyze-photo/stream`, {
         method: 'POST',
         body: formData,
       })
-      if (!res.ok) {
-        const msg = await res.text()
+      if (!res.ok || !res.body) {
+        const msg = await res.text().catch(() => '')
         throw new Error(msg || `HTTP ${res.status}`)
       }
-      const json = await res.json()
-      setResult(json)
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder('utf-8')
+      let buffer = ''
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+
+        // SSE frames are separated by blank line. Process by lines.
+        const parts = buffer.split('\n\n')
+        // Keep the last partial chunk in buffer
+        buffer = parts.pop() || ''
+
+        for (const chunk of parts) {
+          const lines = chunk.split('\n')
+          let eventType: string | null = null
+          let dataText = ''
+          for (const line of lines) {
+            if (line.startsWith('event:')) eventType = line.slice(6).trim()
+            else if (line.startsWith('data:')) dataText += line.slice(5).trim()
+          }
+          if (!eventType) continue
+          try {
+            const data = dataText ? JSON.parse(dataText) : {}
+            if (eventType === 'quick') {
+              setQuick(data.quick_result ?? '')
+            } else if (eventType === 'detailed') {
+              // detailed.llm_output is text
+              setDetailed(data.llm_output ?? '')
+            } else if (eventType === 'error') {
+              setError(data.error ?? 'stream error')
+            }
+          } catch (err: any) {
+            setError(err?.message || 'parse error')
+          }
+        }
+      }
     } catch (err: any) {
       setError(err?.message || 'Request failed')
     } finally {
@@ -36,7 +76,7 @@ function App() {
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: '40px auto', padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}>
+    <div style={{ maxWidth: 720, margin: '40px auto', padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}>
       <h1 style={{ marginBottom: 16 }}>Image Analyze Demo</h1>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
         <div>
@@ -48,7 +88,7 @@ function App() {
           />
         </div>
         <button type="submit" disabled={loading} style={{ padding: '8px 14px', borderRadius: 6, border: '1px solid #ddd', background: '#111', color: '#fff' }}>
-          {loading ? 'Uploading…' : 'Analyze'}
+          {loading ? 'Processing… (streaming)' : 'Analyze (stream)'}
         </button>
       </form>
 
@@ -56,10 +96,18 @@ function App() {
         <div style={{ marginTop: 16, color: '#b00020' }}>Error: {error}</div>
       )}
 
-      {result && (
-        <pre style={{ marginTop: 16, background: '#f6f8fa', padding: 12, borderRadius: 6, overflowX: 'auto' }}>
-{JSON.stringify(result, null, 2)}
-        </pre>
+      {quick && (
+        <div style={{ marginTop: 16 }}>
+          <h3>Quick result</h3>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{quick}</pre>
+        </div>
+      )}
+
+      {detailed && (
+        <div style={{ marginTop: 16 }}>
+          <h3>Detailed</h3>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{detailed}</pre>
+        </div>
       )}
     </div>
   )
