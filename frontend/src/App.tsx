@@ -21,7 +21,7 @@ function App() {
       const formData = new FormData()
       formData.append('photo', file)
 
-      const res = await fetch(`/api/analyze-photo/stream`, {
+      const res = await fetch(`/api/analyze-photo`, {
         method: 'POST',
         body: formData,
       })
