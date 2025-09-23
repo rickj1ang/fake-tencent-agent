@@ -23,7 +23,6 @@ async def analyze_photo(photo: UploadFile = File(...), prompt: str = Form("")):
             model="gemini-2.5-flash",
             contents="ping",
         )
-        client.close()
         return {
             "filename": photo.filename,
             "size_bytes": len(contents),
