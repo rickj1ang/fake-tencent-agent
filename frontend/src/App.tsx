@@ -2,7 +2,6 @@ import { useState } from 'react'
 
 function App() {
   const [file, setFile] = useState<File | null>(null)
-  const [prompt, setPrompt] = useState('Describe this image')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -19,7 +18,6 @@ function App() {
       setLoading(true)
       const formData = new FormData()
       formData.append('photo', file)
-      formData.append('prompt', prompt)
       const res = await fetch(`/api/analyze-photo`, {
         method: 'POST',
         body: formData,
@@ -41,16 +39,6 @@ function App() {
     <div style={{ maxWidth: 640, margin: '40px auto', padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}>
       <h1 style={{ marginBottom: 16 }}>Image Analyze Demo</h1>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>Prompt</label>
-          <input
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Enter your instruction"
-            style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6 }}
-          />
-        </div>
         <div>
           <label style={{ display: 'block', marginBottom: 6 }}>Photo</label>
           <input
