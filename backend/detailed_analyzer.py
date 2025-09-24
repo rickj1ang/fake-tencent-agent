@@ -2,7 +2,7 @@ from google import genai
 from google.genai import types
 
 
-def run_detailed(contents: bytes) -> str:
+def run_detailed(contents: bytes) -> str | None:
     client = genai.Client()
     prompts = '''
         ## 请详细识别照片中的主要的产品和物品。对于每个识别出的产品，请提取以下信息并以 JSON 数组的形式返回
