@@ -5,6 +5,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [quick, setQuick] = useState<string | null>(null)
   const [detailed, setDetailed] = useState<any[] | null>(null)
+  const [stockInfo, setStockInfo] = useState<any[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -103,6 +104,9 @@ function App() {
             } else if (eventType === 'detailed') {
               // detailed.detailed_products is array
               setDetailed(data.detailed_products ?? [])
+            } else if (eventType === 'stock') {
+              // stock.stock_info is array
+              setStockInfo(data.stock_info ?? [])
             } else if (eventType === 'error') {
               setError(data.error ?? 'stream error')
             }
@@ -347,99 +351,217 @@ function App() {
           flexDirection: 'column',
           gap: '16px'
         }}>
-        {/* Quick Result Section */}
-        <div style={{ 
-          marginTop: 20, 
-          padding: 16, 
-          backgroundColor: '#e6f7ff', 
-          borderRadius: 12, 
-          textAlign: 'left',
-          minHeight: '60px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '14px', fontWeight: '500', color: '#1890ff' }}>
-              {quick || (loading ? '让我看看这是虾米东东' : '')}
-            </span>
-            {loading && !quick && (
-              <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid #1890ff',
-                borderTop: '2px solid transparent',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
-            )}
-          </div>
-        </div>
-
-        {/* Detailed Analysis Section */}
-        {detailed && detailed.length > 0 && (
-          <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f6f8fa', borderRadius: 12, textAlign: 'left' }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#24292e', fontSize: '16px', fontWeight: '600' }}>
-              看看还有啥信息
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {detailed.map((product: any, index: number) => (
-                <div key={index} style={{
-                  padding: '12px',
-                  backgroundColor: 'white',
-                  borderRadius: '8px',
-                  border: '1px solid #e1e4e8',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        {/* Unified Analysis Flow */}
+        {(quick || detailed || stockInfo) && (
+          <div style={{ 
+            marginTop: 20, 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: 16,
+            padding: '20px',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Background Pattern */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+              pointerEvents: 'none'
+            }}></div>
+            
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              {/* Step 1: Quick Recognition */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px',
+                marginBottom: quick ? '20px' : '0',
+                padding: '12px 16px',
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}>
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: '600', color: '#24292e' }}>
-                        {product.product_name}
-                      </span>
-                      {product.brand && (
-                        <span style={{ 
-                          fontSize: '12px', 
-                          padding: '2px 6px', 
-                          backgroundColor: '#f1f8ff', 
-                          color: '#0366d6',
-                          borderRadius: '4px'
-                        }}>
-                          {product.brand}
-                        </span>
-                      )}
-                    </div>
-                    {product.model_or_specific_name && (
-                      <div style={{ fontSize: '13px', color: '#586069' }}>
-                        型号: {product.model_or_specific_name}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {product.product_category && (
-                        <span style={{ 
-                          fontSize: '11px', 
-                          padding: '2px 6px', 
-                          backgroundColor: '#f6f8fa', 
-                          color: '#586069',
-                          borderRadius: '4px'
-                        }}>
-                          {product.product_category}
-                        </span>
-                      )}
-                      {product.manufacturer_or_parent_company && (
-                        <span style={{ 
-                          fontSize: '11px', 
-                          padding: '2px 6px', 
-                          backgroundColor: '#fff5b4', 
-                          color: '#735c0f',
-                          borderRadius: '4px'
-                        }}>
-                          {product.manufacturer_or_parent_company}
-                        </span>
-                      )}
-                    </div>
+                  1
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>快速识别</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500' }}>
+                    {quick || (loading ? '让我看看这是虾米东东' : '')}
                   </div>
                 </div>
-              ))}
+                {loading && !quick && (
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    border: '2px solid rgba(255,255,255,0.6)',
+                    borderTop: '2px solid transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                )}
+              </div>
+
+              {/* Step 2: Detailed Analysis */}
+              {detailed && detailed.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '12px',
+                    marginBottom: '16px',
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    borderRadius: '12px',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255,255,255,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      fontWeight: '600'
+                    }}>
+                      2
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>详细分析</div>
+                      <div style={{ fontSize: '16px', fontWeight: '500' }}>发现 {detailed.length} 个产品</div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    {detailed.map((product: any, index: number) => (
+                      <div key={index} style={{
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(5px)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600' }}>
+                            {product.product_name}
+                          </span>
+                          {product.brand && (
+                            <span style={{ 
+                              fontSize: '11px', 
+                              padding: '2px 6px', 
+                              backgroundColor: 'rgba(255,255,255,0.2)', 
+                              borderRadius: '4px'
+                            }}>
+                              {product.brand}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                          {product.model_or_specific_name && `${product.model_or_specific_name} • `}
+                          {product.product_category}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Stock Information */}
+              {stockInfo && stockInfo.length > 0 && (
+                <div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '12px',
+                    marginBottom: '16px',
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    borderRadius: '12px',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255,255,255,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      fontWeight: '600'
+                    }}>
+                      3
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>股价分析</div>
+                      <div style={{ fontSize: '16px', fontWeight: '500' }}>💰 相关公司股价与近况</div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    {stockInfo.map((company: any, index: number) => (
+                      <div key={index} style={{
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(5px)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600' }}>
+                            {company.company_name}
+                          </span>
+                          {company.stock_price && company.stock_price !== 'N/A' && (
+                            <span style={{ 
+                              fontSize: '12px', 
+                              padding: '2px 6px', 
+                              backgroundColor: 'rgba(255,255,255,0.2)', 
+                              borderRadius: '4px'
+                            }}>
+                              {company.stock_price}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.4' }}>
+                          {company.price_trend && `趋势: ${company.price_trend} • `}
+                          {company.business_overview}
+                        </div>
+                        {company.recent_news && (
+                          <div style={{ 
+                            fontSize: '11px', 
+                            opacity: 0.7,
+                            marginTop: '6px',
+                            padding: '6px 8px',
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            borderRadius: '4px'
+                          }}>
+                            📰 {company.recent_news}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
