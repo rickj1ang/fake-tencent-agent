@@ -35,7 +35,7 @@ async def analyze_photo_stream(photo: UploadFile = File(...)):
 
             # then detailed
             detailed = await detailed_task
-            yield f"event: detailed\ndata: {json.dumps({'llm_output': detailed}, ensure_ascii=False)}\n\n"
+            yield f"event: detailed\ndata: {json.dumps({'detailed_products': detailed}, ensure_ascii=False)}\n\n"
             yield "event: done\ndata: {}\n\n"
         except Exception as e:
             err = {"error": str(e)}

@@ -4,7 +4,7 @@ function App() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [quick, setQuick] = useState<string | null>(null)
-  const [detailed, setDetailed] = useState<string | null>(null)
+  const [detailed, setDetailed] = useState<any[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -101,8 +101,8 @@ function App() {
             if (eventType === 'quick') {
               setQuick(data.quick_result ?? '')
             } else if (eventType === 'detailed') {
-              // detailed.llm_output is text
-              setDetailed(data.llm_output ?? '')
+              // detailed.detailed_products is array
+              setDetailed(data.detailed_products ?? [])
             } else if (eventType === 'error') {
               setError(data.error ?? 'stream error')
             }
@@ -193,40 +193,89 @@ function App() {
                     zIndex: 1
                   }}
                 />
-                {loading && (
+                {loading && !quick && (
                   <div style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 12,
-                    background: 'rgba(0, 0, 0, 0.7)',
                     borderRadius: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     zIndex: 2,
-                    color: 'white'
+                    pointerEvents: 'none',
+                    overflow: 'hidden'
                   }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      border: '3px solid #fff',
-                      borderTop: '3px solid transparent',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                      marginBottom: '12px'
-                    }}></div>
-                    <div style={{ fontSize: '14px', fontWeight: '600' }}>Scanning...</div>
+                    {/* 激光扫描线 */}
                     <div style={{ 
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       right: 0,
-                      height: '2px',
-                      background: 'linear-gradient(90deg, transparent, #00ff00, transparent)',
-                      animation: 'scan 2s linear infinite'
+                      height: '3px',
+                      background: 'linear-gradient(90deg, transparent, #00ff00, #00ff00, transparent)',
+                      boxShadow: '0 0 10px #00ff00, 0 0 20px #00ff00',
+                      animation: 'laserScan 1.5s ease-in-out infinite'
+                    }}></div>
+                    
+                    {/* 扫描网格效果 */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: `
+                        linear-gradient(90deg, transparent 48%, rgba(0, 255, 0, 0.3) 49%, rgba(0, 255, 0, 0.3) 51%, transparent 52%),
+                        linear-gradient(0deg, transparent 48%, rgba(0, 255, 0, 0.3) 49%, rgba(0, 255, 0, 0.3) 51%, transparent 52%)
+                      `,
+                      backgroundSize: '20px 20px',
+                      animation: 'gridPulse 2s ease-in-out infinite'
+                    }}></div>
+                    
+                    {/* 角落扫描点 */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '8px',
+                      left: '8px',
+                      width: '12px',
+                      height: '12px',
+                      border: '2px solid #00ff00',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 10px #00ff00',
+                      animation: 'cornerPulse 1s ease-in-out infinite'
+                    }}></div>
+                    <div style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      width: '12px',
+                      height: '12px',
+                      border: '2px solid #00ff00',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 10px #00ff00',
+                      animation: 'cornerPulse 1s ease-in-out infinite 0.5s'
+                    }}></div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '20px',
+                      left: '8px',
+                      width: '12px',
+                      height: '12px',
+                      border: '2px solid #00ff00',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 10px #00ff00',
+                      animation: 'cornerPulse 1s ease-in-out infinite 1s'
+                    }}></div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '20px',
+                      right: '8px',
+                      width: '12px',
+                      height: '12px',
+                      border: '2px solid #00ff00',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 10px #00ff00',
+                      animation: 'cornerPulse 1s ease-in-out infinite 1.5s'
                     }}></div>
                   </div>
                 )}
@@ -298,19 +347,102 @@ function App() {
           flexDirection: 'column',
           gap: '16px'
         }}>
-          {quick && (
-            <div style={{ padding: 16, backgroundColor: '#e6f7ff', borderRadius: 12, textAlign: 'left' }}>
-              <h3 style={{ margin: '0 0 8px 0', color: '#1890ff', fontSize: '16px' }}>Quick Result</h3>
-              <div style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.5' }}>{quick}</div>
-            </div>
-          )}
+        {/* Quick Result Section */}
+        <div style={{ 
+          marginTop: 20, 
+          padding: 16, 
+          backgroundColor: '#e6f7ff', 
+          borderRadius: 12, 
+          textAlign: 'left',
+          minHeight: '60px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '16px', fontWeight: '600', color: '#1890ff' }}>
+              {quick || '让我看看这是虾米东东'}
+            </span>
+            {loading && !quick && (
+              <div style={{
+                width: '20px',
+                height: '20px',
+                border: '2px solid #1890ff',
+                borderTop: '2px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+            )}
+          </div>
+        </div>
 
-          {detailed && (
-            <div style={{ padding: 16, backgroundColor: '#f6f8fa', borderRadius: 12, textAlign: 'left' }}>
-              <h3 style={{ margin: '0 0 8px 0', color: '#24292e', fontSize: '16px' }}>Detailed Analysis</h3>
-              <div style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.5' }}>{detailed}</div>
+        {/* Detailed Analysis Section */}
+        {detailed && detailed.length > 0 && (
+          <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f6f8fa', borderRadius: 12, textAlign: 'left' }}>
+            <h3 style={{ margin: '0 0 16px 0', color: '#24292e', fontSize: '16px', fontWeight: '600' }}>
+              看看还有啥信息
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {detailed.map((product: any, index: number) => (
+                <div key={index} style={{
+                  padding: '12px',
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                  border: '1px solid #e1e4e8',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}>
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: '600', color: '#24292e' }}>
+                        {product.product_name}
+                      </span>
+                      {product.brand && (
+                        <span style={{ 
+                          fontSize: '12px', 
+                          padding: '2px 6px', 
+                          backgroundColor: '#f1f8ff', 
+                          color: '#0366d6',
+                          borderRadius: '4px'
+                        }}>
+                          {product.brand}
+                        </span>
+                      )}
+                    </div>
+                    {product.model_or_specific_name && (
+                      <div style={{ fontSize: '13px', color: '#586069' }}>
+                        型号: {product.model_or_specific_name}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {product.product_category && (
+                        <span style={{ 
+                          fontSize: '11px', 
+                          padding: '2px 6px', 
+                          backgroundColor: '#f6f8fa', 
+                          color: '#586069',
+                          borderRadius: '4px'
+                        }}>
+                          {product.product_category}
+                        </span>
+                      )}
+                      {product.manufacturer_or_parent_company && (
+                        <span style={{ 
+                          fontSize: '11px', 
+                          padding: '2px 6px', 
+                          backgroundColor: '#fff5b4', 
+                          color: '#735c0f',
+                          borderRadius: '4px'
+                        }}>
+                          {product.manufacturer_or_parent_company}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
 
@@ -319,9 +451,24 @@ function App() {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        @keyframes scan {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+        @keyframes laserScan {
+          0% { transform: translateY(-100%); }
+          50% { transform: translateY(100%); }
+          100% { transform: translateY(-100%); }
+        }
+        @keyframes gridPulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.8; }
+        }
+        @keyframes cornerPulse {
+          0%, 100% { 
+            transform: scale(1);
+            opacity: 0.6;
+          }
+          50% { 
+            transform: scale(1.2);
+            opacity: 1;
+          }
         }
       `}</style>
     </div>
