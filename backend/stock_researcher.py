@@ -67,6 +67,7 @@ def research_stock_info(products_data: list) -> list | None:
         
         # 尝试解析JSON响应
         response_text = response.text
+        print(f"Stock search response: {response_text[:200]}...")
         
         # 查找JSON部分（可能在```json```代码块中）
         if "```json" in response_text:
@@ -80,8 +81,11 @@ def research_stock_info(products_data: list) -> list | None:
         else:
             json_text = response_text
         
+        print(f"Extracted JSON: {json_text[:200]}...")
+        
         # 解析JSON
         stock_data = json.loads(json_text)
+        print(f"Parsed stock data: {stock_data}")
         return stock_data
         
     except json.JSONDecodeError as e:
