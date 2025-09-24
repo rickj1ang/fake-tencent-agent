@@ -1,11 +1,9 @@
-from google import genai
 from google.genai import types
 from google.genai.types import HttpOptions
 import json
 
 
-def run_detailed(contents: bytes) -> list | None:
-    client = genai.Client()
+async def run_detailed(aclient, contents: bytes) -> list | None:
     
     # 定义JSON schema
     response_schema = {
@@ -33,7 +31,7 @@ def run_detailed(contents: bytes) -> list | None:
         5.  **`manufacturer_or_parent_company`**: 制造该产品或拥有该品牌的公司名称（例如：Apple Inc., Nike Inc., The Coca-Cola Company）。
         '''
     
-    response = client.models.generate_content(
+    response = await aclient.models.generate_content(
         model="gemini-2.5-flash",
         contents=[
             types.Part.from_bytes(mime_type="image/jpeg", data=contents),

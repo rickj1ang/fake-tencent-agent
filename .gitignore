@@ -26,3 +26,8 @@ pnpm-debug.log*
 .idea/
 .vscode/
 *.swp
+
+# Development scripts and local files
+dev.sh
+.env
+service-account-key.json

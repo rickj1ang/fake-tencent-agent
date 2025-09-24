@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 function App() {
   const [file, setFile] = useState<File | null>(null)
@@ -6,9 +6,18 @@ function App() {
   const [quick, setQuick] = useState<string | null>(null)
   const [detailed, setDetailed] = useState<any[] | null>(null)
   const [stockInfo, setStockInfo] = useState<any[] | null>(null)
+  const [competitors, setCompetitors] = useState<any[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const resultsRef = useRef<HTMLDivElement>(null)
+
+  // Auto scroll to bottom when new content appears
+  useEffect(() => {
+    if (resultsRef.current) {
+      resultsRef.current.scrollTop = resultsRef.current.scrollHeight
+    }
+  }, [quick, detailed, stockInfo])
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -31,7 +40,9 @@ function App() {
         setFile(droppedFile)
         setError(null)
         setQuick(null)
-        setDetailed(null)
+            setDetailed(null)
+            setStockInfo(null)
+            setCompetitors(null)
       } else {
         setError('Please upload an image file.')
       }
@@ -43,7 +54,9 @@ function App() {
       setFile(e.target.files[0])
       setError(null)
       setQuick(null)
-      setDetailed(null)
+            setDetailed(null)
+            setStockInfo(null)
+            setCompetitors(null)
     }
   }
 
@@ -54,8 +67,10 @@ function App() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    setQuick(null)
-    setDetailed(null)
+            setQuick(null)
+            setDetailed(null)
+            setStockInfo(null)
+            setCompetitors(null)
     if (!file) {
       setError('Please choose an image file.')
       return
@@ -104,10 +119,13 @@ function App() {
             } else if (eventType === 'detailed') {
               // detailed.detailed_products is array
               setDetailed(data.detailed_products ?? [])
-            } else if (eventType === 'stock') {
+                  } else if (eventType === 'stock') {
               // stock.stock_info is array
               console.log('Received stock event:', data)
               setStockInfo(data.stock_info ?? [])
+                  } else if (eventType === 'competitors') {
+                    console.log('Received competitors event:', data)
+                    setCompetitors(data.competitors ?? [])
             } else if (eventType === 'error') {
               setError(data.error ?? 'stream error')
             }
@@ -343,25 +361,27 @@ function App() {
           </div>
         )}
 
-        <div style={{ 
-          marginTop: 20, 
-          minHeight: 200,
-          maxHeight: 300,
-          overflow: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px'
-        }}>
-        {/* Unified Analysis Flow */}
-        {(loading || quick || detailed || stockInfo) && (
-          <div style={{ 
+        <div 
+          ref={resultsRef}
+          style={{ 
             marginTop: 20, 
+            minHeight: 200,
+            maxHeight: '70vh',
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+        {/* Unified Analysis Flow */}
+                {(loading || quick || detailed || stockInfo || competitors) && (
+          <div style={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: 16,
             padding: '20px',
             color: 'white',
             position: 'relative',
-            overflow: 'hidden'
+                    overflow: 'visible',
+                    textAlign: 'left'
           }}>
             {/* Background Pattern */}
             <div style={{
@@ -387,21 +407,7 @@ function App() {
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.2)'
               }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: '600'
-                }}>
-                  1
-                </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>快速识别</div>
                   <div style={{ fontSize: '16px', fontWeight: '500' }}>
                     {quick || (loading ? '让我看看这是虾米东东' : '')}
                   </div>
@@ -432,21 +438,7 @@ function App() {
                     backdropFilter: 'blur(10px)',
                     border: '1px solid rgba(255,255,255,0.2)'
                   }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      fontWeight: '600'
-                    }}>
-                      2
-                    </div>
                     <div>
-                      <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>详细分析</div>
                       <div style={{ fontSize: '16px', fontWeight: '500' }}>
                         {loading && !detailed ? '我看看还有啥信息' : `发现 ${detailed?.length || 0} 个产品`}
                       </div>
@@ -487,8 +479,8 @@ function App() {
                 </div>
               )}
 
-              {/* Step 3: Stock Information */}
-              {(detailed && detailed.length > 0) || (loading && detailed && detailed.length > 0) && (
+                      {/* Step 3: Stock Information */}
+              {(detailed && detailed.length > 0) && (
                 <div>
                   <div style={{ 
                     display: 'flex', 
@@ -501,21 +493,7 @@ function App() {
                     backdropFilter: 'blur(10px)',
                     border: '1px solid rgba(255,255,255,0.2)'
                   }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      fontWeight: '600'
-                    }}>
-                      3
-                    </div>
                     <div>
-                      <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>股价分析</div>
                       <div style={{ fontSize: '16px', fontWeight: '500' }}>
                         {loading && !stockInfo ? '我翻翻其他资料' : '💰 相关公司股价与近况'}
                       </div>
@@ -567,6 +545,72 @@ function App() {
                   </div>
                 </div>
               )}
+
+                      {/* Step 4: Competitors Information */}
+                      {(detailed && detailed.length > 0) && (
+                        <div style={{ marginTop: '16px' }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '12px',
+                            marginBottom: '16px',
+                            padding: '12px 16px',
+                            backgroundColor: 'rgba(255,255,255,0.15)',
+                            borderRadius: '12px',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255,255,255,0.2)'
+                          }}>
+                            <div>
+                              <div style={{ fontSize: '16px', fontWeight: '500' }}>
+                                {loading && !competitors ? '我找找竞品和同行' : '🏁 竞品与同业公司'}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'grid', gap: '8px' }}>
+                            {competitors && competitors.map((company: any, index: number) => (
+                              <div key={index} style={{
+                                padding: '12px 16px',
+                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                backdropFilter: 'blur(5px)'
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                  <span style={{ fontSize: '14px', fontWeight: '600' }}>
+                                    {company.company_name}
+                                  </span>
+                                  {company.stock_price && company.stock_price !== 'N/A' && (
+                                    <span style={{ 
+                                      fontSize: '12px', 
+                                      padding: '2px 6px', 
+                                      backgroundColor: 'rgba(255,255,255,0.2)', 
+                                      borderRadius: '4px'
+                                    }}>
+                                      {company.stock_price}
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: '12px', opacity: 0.8, lineHeight: '1.4' }}>
+                                  {company.price_trend && `趋势: ${company.price_trend} • `}
+                                  {company.business_overlap_reason || company.business_overview}
+                                </div>
+                                {company.recent_news && (
+                                  <div style={{ 
+                                    fontSize: '11px', 
+                                    opacity: 0.7,
+                                    marginTop: '6px',
+                                    padding: '6px 8px',
+                                    backgroundColor: 'rgba(255,255,255,0.1)',
+                                    borderRadius: '4px'
+                                  }}>
+                                    📰 {company.recent_news}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
             </div>
           </div>
         )}

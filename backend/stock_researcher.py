@@ -1,21 +1,17 @@
-from google import genai
 from google.genai.types import (
     GenerateContentConfig,
     GoogleSearch,
-    HttpOptions,
     Tool,
 )
 import json
 
 
-def research_stock_info(products_data: list) -> list | None:
+async def research_stock_info(aclient, products_data: list) -> list | None:
     """
     根据产品信息搜索相关公司的股价和近况
     """
     if not products_data or not isinstance(products_data, list):
         return None
-    
-    client = genai.Client()
     
     # 提取所有公司名称
     companies = []
@@ -55,7 +51,7 @@ def research_stock_info(products_data: list) -> list | None:
     """
     
     try:
-        response = client.models.generate_content(
+        response = await aclient.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
             config=GenerateContentConfig(
@@ -91,7 +87,9 @@ def research_stock_info(products_data: list) -> list | None:
     except json.JSONDecodeError as e:
         print(f"JSON解析错误: {e}")
         print(f"原始响应: {response_text}")
-        return None
+        return []
     except Exception as e:
         print(f"搜索股价信息时出错: {e}")
-        return None
+        if "SSL" in str(e) or "EOF" in str(e):
+            print("网络连接问题，可能是SSL证书或网络不稳定")
+        return []

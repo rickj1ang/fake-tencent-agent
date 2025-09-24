@@ -2,11 +2,12 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
 import os
-import asyncio
 import json
+from google.genai import Client
 from detailed_analyzer import run_detailed
 from simple_recognizer import quick_label
 from stock_researcher import research_stock_info
+from competitor_researcher import research_competitors
 
 app = FastAPI()
 
@@ -26,29 +27,63 @@ async def analyze_photo_stream(photo: UploadFile = File(...)):
 
     async def event_stream():
         try:
-            # run quick and detailed concurrently
-            quick_task = asyncio.to_thread(quick_label, contents)
-            detailed_task = asyncio.to_thread(run_detailed, contents)
+            print("[SSE] start request")
 
-            # send quick as soon as ready
-            quick = await quick_task
+            # init async client per request
+            aclient = Client(vertexai=True).aio
+
+            # 1) Quick
+            try:
+                print("[SSE] quick: start")
+                quick = await quick_label(aclient, contents)
+                print(f"[SSE] quick: ok -> {quick[:60] if isinstance(quick, str) else quick}")
+            except Exception as e:
+                print(f"[SSE] quick: fail -> {e}")
+                quick = ""
             yield f"event: quick\ndata: {json.dumps({'quick_result': quick}, ensure_ascii=False)}\n\n"
 
-            # then detailed
-            detailed = await detailed_task
+            # 2) Detailed
+            try:
+                print("[SSE] detailed: start")
+                detailed = await run_detailed(aclient, contents)
+                print(f"[SSE] detailed: ok -> {len(detailed) if isinstance(detailed, list) else 'N/A'} items")
+            except Exception as e:
+                print(f"[SSE] detailed: fail -> {e}")
+                detailed = []
             yield f"event: detailed\ndata: {json.dumps({'detailed_products': detailed}, ensure_ascii=False)}\n\n"
-            
-            # then stock research (if detailed data is available)
+
+            # 3) Stock
             if detailed and isinstance(detailed, list) and len(detailed) > 0:
-                stock_task = asyncio.to_thread(research_stock_info, detailed)
-                stock_data = await stock_task
-                if stock_data:
-                    yield f"event: stock\ndata: {json.dumps({'stock_info': stock_data}, ensure_ascii=False)}\n\n"
-            
+                try:
+                    print("[SSE] stock: start")
+                    stock_data = await research_stock_info(aclient, detailed)
+                    print(f"[SSE] stock: ok -> {len(stock_data) if stock_data else 0} items")
+                    if stock_data:
+                        yield f"event: stock\ndata: {json.dumps({'stock_info': stock_data}, ensure_ascii=False)}\n\n"
+                except Exception as e:
+                    print(f"[SSE] stock: fail -> {e}")
+
+            # 4) Competitors
+            if detailed and isinstance(detailed, list) and len(detailed) > 0:
+                try:
+                    print("[SSE] competitors: start")
+                    comp_data = await research_competitors(aclient, detailed)
+                    print(f"[SSE] competitors: ok -> {len(comp_data) if comp_data else 0} items")
+                    if comp_data:
+                        yield f"event: competitors\ndata: {json.dumps({'competitors': comp_data}, ensure_ascii=False)}\n\n"
+                except Exception as e:
+                    print(f"[SSE] competitors: fail -> {e}")
+
+            print("[SSE] done")
             yield "event: done\ndata: {}\n\n"
         except Exception as e:
-            err = {"error": str(e)}
-            yield f"event: error\ndata: {json.dumps(err, ensure_ascii=False)}\n\n"
+            print(f"[SSE] stream error: {e}")
+            yield "event: done\ndata: {}\n\n"
+        finally:
+            try:
+                await aclient.aclose()
+            except Exception:
+                pass
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
