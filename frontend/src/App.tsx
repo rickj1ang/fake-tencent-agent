@@ -119,103 +119,149 @@ function App() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '40px auto', padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif' }}>
-      <h1 style={{ marginBottom: 16 }}>Vicky - Image Analysis</h1>
-      
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
-        <div
-          className={`upload-area ${dragActive ? 'drag-active' : ''}`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={handleClick}
-          style={{
-            border: '2px dashed #ccc',
-            borderRadius: 8,
-            padding: '40px 20px',
-            textAlign: 'center',
-            cursor: 'pointer',
-            backgroundColor: dragActive ? '#f0f8ff' : '#fafafa',
-            transition: 'all 0.2s ease',
-            borderColor: dragActive ? '#007bff' : '#ccc'
-          }}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileInput}
-            style={{ display: 'none' }}
-          />
-          {file ? (
-            <div>
-              <img
-                src={URL.createObjectURL(file)}
-                alt="Preview"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: 200,
-                  borderRadius: 4,
-                  marginBottom: 12
-                }}
-              />
-              <p style={{ margin: 0, color: '#666' }}>
-                {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-              <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#999' }}>
-                Click to change image
-              </p>
-            </div>
-          ) : (
-            <div>
-              <p style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#666' }}>
-                📷 Drop an image here or click to select
-              </p>
-              <p style={{ margin: 0, fontSize: '14px', color: '#999' }}>
-                Supports JPG, PNG, GIF, WebP
-              </p>
-            </div>
-          )}
-        </div>
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      padding: '20px',
+      fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }}>
+      <div style={{ 
+        width: '100%', 
+        maxWidth: 400, 
+        background: 'white', 
+        borderRadius: 20, 
+        padding: 30, 
+        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+        textAlign: 'center'
+      }}>
+        <h1 style={{ marginBottom: 30, color: '#333', fontSize: '24px', fontWeight: '600' }}>Vicky</h1>
+        
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 20 }}>
+          <div
+            className={`upload-area ${dragActive ? 'drag-active' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={handleClick}
+            style={{
+              border: '2px dashed #ddd',
+              borderRadius: 16,
+              padding: '30px 20px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              backgroundColor: dragActive ? '#f0f8ff' : '#fafafa',
+              transition: 'all 0.3s ease',
+              borderColor: dragActive ? '#007bff' : '#ddd',
+              minHeight: '200px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileInput}
+              style={{ display: 'none' }}
+            />
+            {file ? (
+              <div>
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt="Preview"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: 150,
+                    borderRadius: 8,
+                    marginBottom: 12
+                  }}
+                />
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#999' }}>
+                  Click to change image
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📷</div>
+                <p style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#666' }}>
+                  Drop an image here or click to select
+                </p>
+                <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>
+                  Supports JPG, PNG, GIF, WebP
+                </p>
+              </div>
+            )}
+          </div>
 
-        <button 
-          type="submit" 
-          disabled={loading || !file} 
-          style={{ 
-            padding: '12px 24px', 
-            borderRadius: 6, 
-            border: 'none', 
-            background: loading || !file ? '#ccc' : '#007bff', 
-            color: '#fff',
-            fontSize: '16px',
-            cursor: loading || !file ? 'not-allowed' : 'pointer',
-            transition: 'background 0.2s ease'
-          }}
-        >
-          {loading ? 'Processing… (streaming)' : 'Analyze Image'}
-        </button>
-      </form>
+          <button 
+            type="submit" 
+            disabled={loading || !file} 
+            style={{ 
+              padding: '16px 32px', 
+              borderRadius: 12, 
+              border: 'none', 
+              background: loading || !file ? '#ddd' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+              color: '#fff',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: loading || !file ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: loading || !file ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            {loading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid #fff',
+                  borderTop: '2px solid transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+                Scanning...
+              </div>
+            ) : (
+              'Analyze Image'
+            )}
+          </button>
+        </form>
 
-      {error && (
-        <div style={{ marginTop: 16, padding: 12, backgroundColor: '#ffe6e6', color: '#b00020', borderRadius: 6 }}>
-          Error: {error}
-        </div>
-      )}
+        {error && (
+          <div style={{ marginTop: 20, padding: 12, backgroundColor: '#ffe6e6', color: '#b00020', borderRadius: 8, fontSize: '14px' }}>
+            {error}
+          </div>
+        )}
 
-      {quick && (
-        <div style={{ marginTop: 16, padding: 16, backgroundColor: '#e6f7ff', borderRadius: 6 }}>
-          <h3 style={{ margin: '0 0 8px 0', color: '#1890ff' }}>Quick Result</h3>
-          <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>{quick}</pre>
-        </div>
-      )}
+        {quick && (
+          <div style={{ marginTop: 20, padding: 16, backgroundColor: '#e6f7ff', borderRadius: 12, textAlign: 'left' }}>
+            <h3 style={{ margin: '0 0 8px 0', color: '#1890ff', fontSize: '16px' }}>Quick Result</h3>
+            <div style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.5' }}>{quick}</div>
+          </div>
+        )}
 
-      {detailed && (
-        <div style={{ marginTop: 16, padding: 16, backgroundColor: '#f6f8fa', borderRadius: 6 }}>
-          <h3 style={{ margin: '0 0 8px 0', color: '#24292e' }}>Detailed Analysis</h3>
-          <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>{detailed}</pre>
-        </div>
-      )}
+        {detailed && (
+          <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f6f8fa', borderRadius: 12, textAlign: 'left' }}>
+            <h3 style={{ margin: '0 0 8px 0', color: '#24292e', fontSize: '16px' }}>Detailed Analysis</h3>
+            <div style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.5' }}>{detailed}</div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
