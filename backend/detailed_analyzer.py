@@ -43,7 +43,6 @@ def run_detailed(contents: bytes) -> list | None:
             "response_mime_type": "application/json",
             "response_schema": response_schema,
         },
-        http_options=HttpOptions(api_version="v1")
     )
     
     try:
