@@ -106,6 +106,7 @@ function App() {
               setDetailed(data.detailed_products ?? [])
             } else if (eventType === 'stock') {
               // stock.stock_info is array
+              console.log('Received stock event:', data)
               setStockInfo(data.stock_info ?? [])
             } else if (eventType === 'error') {
               setError(data.error ?? 'stream error')
@@ -352,7 +353,7 @@ function App() {
           gap: '16px'
         }}>
         {/* Unified Analysis Flow */}
-        {(quick || detailed || stockInfo) && (
+        {(loading || quick || detailed || stockInfo) && (
           <div style={{ 
             marginTop: 20, 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -418,7 +419,7 @@ function App() {
               </div>
 
               {/* Step 2: Detailed Analysis */}
-              {detailed && detailed.length > 0 && (
+              {(quick || (loading && !detailed)) && (
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ 
                     display: 'flex', 
@@ -446,12 +447,14 @@ function App() {
                     </div>
                     <div>
                       <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>详细分析</div>
-                      <div style={{ fontSize: '16px', fontWeight: '500' }}>发现 {detailed.length} 个产品</div>
+                      <div style={{ fontSize: '16px', fontWeight: '500' }}>
+                        {loading && !detailed ? '我看看还有啥信息' : `发现 ${detailed?.length || 0} 个产品`}
+                      </div>
                     </div>
                   </div>
                   
                   <div style={{ display: 'grid', gap: '8px' }}>
-                    {detailed.map((product: any, index: number) => (
+                    {detailed && detailed.map((product: any, index: number) => (
                       <div key={index} style={{
                         padding: '12px 16px',
                         backgroundColor: 'rgba(255,255,255,0.1)',
@@ -485,7 +488,7 @@ function App() {
               )}
 
               {/* Step 3: Stock Information */}
-              {stockInfo && stockInfo.length > 0 && (
+              {(detailed && detailed.length > 0) || (loading && detailed && detailed.length > 0) && (
                 <div>
                   <div style={{ 
                     display: 'flex', 
@@ -513,12 +516,14 @@ function App() {
                     </div>
                     <div>
                       <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '4px' }}>股价分析</div>
-                      <div style={{ fontSize: '16px', fontWeight: '500' }}>💰 相关公司股价与近况</div>
+                      <div style={{ fontSize: '16px', fontWeight: '500' }}>
+                        {loading && !stockInfo ? '我翻翻其他资料' : '💰 相关公司股价与近况'}
+                      </div>
                     </div>
                   </div>
                   
                   <div style={{ display: 'grid', gap: '8px' }}>
-                    {stockInfo.map((company: any, index: number) => (
+                    {stockInfo && stockInfo.map((company: any, index: number) => (
                       <div key={index} style={{
                         padding: '12px 16px',
                         backgroundColor: 'rgba(255,255,255,0.1)',
