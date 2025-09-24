@@ -360,13 +360,13 @@ function App() {
           justifyContent: 'space-between'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '16px', fontWeight: '600', color: '#1890ff' }}>
-              {quick || '让我看看这是虾米东东'}
+            <span style={{ fontSize: '14px', fontWeight: '500', color: '#1890ff' }}>
+              {quick || (loading ? '让我看看这是虾米东东' : '')}
             </span>
             {loading && !quick && (
               <div style={{
-                width: '20px',
-                height: '20px',
+                width: '16px',
+                height: '16px',
                 border: '2px solid #1890ff',
                 borderTop: '2px solid transparent',
                 borderRadius: '50%',
@@ -453,8 +453,7 @@ function App() {
         }
         @keyframes laserScan {
           0% { transform: translateY(-100%); }
-          50% { transform: translateY(100%); }
-          100% { transform: translateY(-100%); }
+          100% { transform: translateY(calc(100% + 100px)); }
         }
         @keyframes gridPulse {
           0%, 100% { opacity: 0.3; }
